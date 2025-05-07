@@ -1,4 +1,3 @@
-// components/Header.jsx
 import Link from 'next/link'
 import { useCart } from '../context/CartContext'
 
@@ -8,10 +7,18 @@ export default function Header() {
 
   return (
     <header className="bg-purple-800 text-white pr-4 py-1 flex items-center shadow">
-      <img src="/assets/top.png" alt="Tripbox Logo" className="h-20 -my-5 -ml-2" />
+      <Link href="/">
+        <img
+          src="/assets/top.png"
+          alt="Tripbox Logo"
+          className="h-20 -my-5 -ml-2 cursor-pointer"
+        />
+      </Link>
 
       <nav className="ml-auto space-x-4 text-sm flex items-center">
-        <Link href="/products">Products</Link>
+        <Link href="/products">
+          <span className="font-semibold">Shop</span>
+        </Link>
         <Link href="/mybox">
           <span className="text-yellow-300 font-semibold">
             My Box

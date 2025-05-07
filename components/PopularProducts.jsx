@@ -21,12 +21,12 @@ export default function PopularProducts() {
     if (qty < 1) return
     addToCart(product, qty)
     setToast(`"${product.name}" ${qty}개를 담았습니다`)
-    setTimeout(() => setToast(''), 2000)
+    setTimeout(() => setToast(''), 1000)
     setQtys(q => ({ ...q, [product.id]: 0 }))
   }
 
   return (
-    <section id="popular" className="w-full bg-white px-4 py-8">
+    <section id="popular" className="w-full bg-white px-4 py-4">
       <h2 className="text-xl font-bold mb-4">인기 상품</h2>
       <div {...handlers} className="flex overflow-x-auto space-x-4 pb-2">
         {products.slice(0, 4).map(product => (
@@ -44,14 +44,14 @@ export default function PopularProducts() {
               <button onClick={() => dec(product.id)} className="px-2 py-1 bg-gray-200 rounded">−</button>
               <span className="w-6 text-center">{qtys[product.id]}</span>
               <button onClick={() => inc(product.id)} className="px-2 py-1 bg-gray-200 rounded">＋</button>
+              <button
+                onClick={() => onAdd(product)}
+                disabled={qtys[product.id] < 1}
+                className="text-sm px-3.5 py-1 bg-purple-800 text-white rounded hover:bg-purple-700 disabled:opacity-50 whitespace-nowrap"
+              >
+                Add to Box
+              </button>
             </div>
-            <button
-              onClick={() => onAdd(product)}
-              disabled={qtys[product.id] < 1}
-              className="w-full bg-purple-800 text-white text-sm py-1 rounded mt-2 hover:bg-purple-700 disabled:opacity-50"
-            >
-              Add to Box
-            </button>
           </div>
         ))}
       </div>
