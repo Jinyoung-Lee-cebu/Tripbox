@@ -1,0 +1,13 @@
+// jsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": ["components/*"],
+      "@/context/*":    ["context/*"],
+      "@/data/*":       ["data/*"],
+      "@/pages/*":      ["pages/*"],
+      "@/styles/*":     ["styles/*"]
+    }
+  }
+}
