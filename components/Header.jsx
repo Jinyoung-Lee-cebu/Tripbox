@@ -1,14 +1,26 @@
 // components/Header.jsx
 import Link from 'next/link'
+import { useCart } from '../context/CartContext'
 
 export default function Header() {
+  const { items } = useCart();
+  const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
+
   return (
-    <header className="bg-purple-800 text-white px-4 py-1 flex items-center shadow">
-      <img src="/assets/top.png" alt="Tripbox Logo" className="h-10" />
+    <header className="bg-purple-800 text-white pr-4 py-1 flex items-center shadow">
+      <img src="/assets/top.png" alt="Tripbox Logo" className="h-20 -my-5 -ml-2" />
+
       <nav className="ml-auto space-x-4 text-sm flex items-center">
         <Link href="/products">Products</Link>
         <Link href="/mybox">
-          <span className="text-yellow-300 font-semibold">My Box</span>
+          <span className="text-yellow-300 font-semibold">
+            My Box
+            {itemCount > 0 && (
+              <span className="ml-1 text-xs bg-white text-purple-800 px-2 py-0.5 rounded-full">
+                {itemCount}
+              </span>
+            )}
+          </span>
         </Link>
       </nav>
     </header>
