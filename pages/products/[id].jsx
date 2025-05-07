@@ -1,5 +1,4 @@
-// pages/products/[id].jsx
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useSwipeable } from 'react-swipeable'
@@ -10,19 +9,19 @@ import Toast from '@/components/Toast'
 
 export default function ProductDetail({ product }) {
   const router = useRouter()
-  const { items, addToCart } = useCart()
-  const [qty, setQty]     = useState(1)
+  const { items, addToCart, removeFromCart } = useCart()
+  const [qty, setQty] = useState(1)
   const [toast, setToast] = useState('')
 
   if (router.isFallback) return <p>Loading…</p>
-  if (!product)      return <p>상품을 찾을 수 없습니다.</p>
+  if (!product) return <p>상품을 찾을 수 없습니다.</p>
 
-  const idx  = products.findIndex(p => p.id === product.id)
+  const idx = products.findIndex(p => p.id === product.id)
   const prev = products[idx - 1]?.id
   const next = products[idx + 1]?.id
 
   const handlers = useSwipeable({
-    onSwipedLeft:  () => next && router.push(`/products/${next}`),
+    onSwipedLeft: () => next && router.push(`/products/${next}`),
     onSwipedRight: () => prev && router.push(`/products/${prev}`),
     trackMouse: true,
   })
@@ -33,14 +32,23 @@ export default function ProductDetail({ product }) {
     setTimeout(() => setToast(''), 1000)
   }
 
-  const totalQty  = items.reduce((sum, i) => sum + i.qty, 0)
+  const onRemove = () => {
+    removeFromCart(product.id)
+    setToast('해당 상품을 My Box에서 모두 제거했습니다.')
+    setTimeout(() => setToast(''), 1000)
+  }
+
+  const totalQty = items.reduce((sum, i) => sum + i.qty, 0)
   const cartTotal = items.reduce((sum, i) => sum + i.price * i.qty, 0)
 
   return (
     <div {...handlers} className="relative min-h-screen bg-white pb-32">
       <div className="px-4 py-4">
-        <img src={product.image} alt={product.name}
-             className="w-full h-80 object-cover rounded-lg" />
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-80 object-cover rounded-lg"
+        />
       </div>
 
       <div className="px-4">
@@ -49,17 +57,33 @@ export default function ProductDetail({ product }) {
           ₱{product.price.toLocaleString()}
         </p>
         <div className="flex items-center space-x-4 mb-4">
-          <button onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="px-3 py-1 bg-gray-200 rounded">−</button>
+          <button
+            onClick={() => setQty(q => Math.max(1, q - 1))}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            −
+          </button>
           <span>{qty}</span>
-          <button onClick={() => setQty(q => Math.min(99, q + 1))}
-                  className="px-3 py-1 bg-gray-200 rounded">＋</button>
+          <button
+            onClick={() => setQty(q => Math.min(99, q + 1))}
+            className="px-3 py-1 bg-gray-200 rounded"
+          >
+            ＋
+          </button>
         </div>
+
         <button
           onClick={onAdd}
-          className="w-full bg-purple-800 text-white py-2 rounded hover:bg-purple-700 mb-8"
+          className="w-full bg-purple-800 text-white py-2 rounded hover:bg-purple-700 mb-2"
         >
           Add to Box
+        </button>
+
+        <button
+          onClick={onRemove}
+          className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
+        >
+          Remove this product from My Box
         </button>
       </div>
 
@@ -77,10 +101,10 @@ export default function ProductDetail({ product }) {
           </p>
         </div>
         <Link href="/mybox">
-          <a className="flex items-center justify-center bg-purple-800 text-white py-2">
+          <div className="flex items-center justify-center bg-purple-800 text-white py-2 cursor-pointer">
             <ShoppingCartIcon className="h-5 w-5 mr-2" />
             My Box
-          </a>
+          </div>
         </Link>
       </div>
 

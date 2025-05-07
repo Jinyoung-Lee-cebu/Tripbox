@@ -14,13 +14,13 @@ export default function PopularProducts() {
 
   const handlers = useSwipeable({ trackMouse: true })
   const inc = id => setQtys(q => ({ ...q, [id]: Math.min(99, q[id] + 1) }))
-  const dec = id => setQtys(q => ({ ...q, [id]: Math.max(0, q[id] - 1) }))
+  const dec = id => setQtys(q => ({ ...q, [id]: Math.max(-99, q[id] - 1) }))
 
   const onAdd = product => {
     const qty = qtys[product.id]
-    if (qty < 1) return
-    addToCart(product, qty)
-    setToast(`"${product.name}" ${qty}개를 담았습니다`)
+    if (qty === 0) return
+    addToCart(product, qty) // 그대로 전달
+    setToast(`"${product.name}" ${qty > 0 ? `+${qty}` : `${qty}`}개 처리되었습니다`)
     setTimeout(() => setToast(''), 1000)
     setQtys(q => ({ ...q, [product.id]: 0 }))
   }
@@ -46,7 +46,7 @@ export default function PopularProducts() {
               <button onClick={() => inc(product.id)} className="px-2 py-1 bg-gray-200 rounded">＋</button>
               <button
                 onClick={() => onAdd(product)}
-                disabled={qtys[product.id] < 1}
+                disabled={qtys[product.id] === 0}
                 className="text-sm px-3.5 py-1 bg-purple-800 text-white rounded hover:bg-purple-700 disabled:opacity-50 whitespace-nowrap"
               >
                 Add to Box
