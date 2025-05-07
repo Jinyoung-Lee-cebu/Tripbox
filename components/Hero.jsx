@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function Hero() {
   return (
-    <section className="relative w-full h-auto overflow-hidden">
+    <section className="relative w-full min-h-[120vh] overflow-hidden">
       <img
         src="/assets/wall.jpg"
         alt="Hero Background"
