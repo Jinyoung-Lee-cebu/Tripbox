@@ -6,12 +6,12 @@ import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
-    <div className="relative overflow-hidden"> {/* ✅ 하단 공백 제거 핵심 */}
+    <div>
       <Header />
       <Hero />
 
-      {/* Hero 밑 섹션 훨씬 많이 겹치게 올리기 */}
-      <div className="-mt-[400px] z-10 relative">
+      {/* ✅ 히어로 밑 적당한 간격 유지 버전 */}
+      <div className="-mt-20 z-10 relative">
         <PopularProducts />
         <HowItWorks />
         <Footer />
