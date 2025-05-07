@@ -30,7 +30,7 @@ export default function ProductDetail({ product }) {
   const onAdd = () => {
     addToCart(product, qty)
     setToast('상품을 My Box에 담았습니다.')
-    setTimeout(() => setToast(''), 2000)
+    setTimeout(() => setToast(''), 1000)
   }
 
   const totalQty  = items.reduce((sum, i) => sum + i.qty, 0)
