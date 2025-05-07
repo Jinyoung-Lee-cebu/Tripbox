@@ -11,7 +11,7 @@ export default function Home() {
       <Hero />
 
       {/* Hero 밑 섹션 훨씬 많이 겹치게 올리기 */}
-      <div className="-mt-[850px] z-10 relative">
+      <div className="-mt-[400px] z-10 relative">
         <PopularProducts />
         <HowItWorks />
         <Footer />
