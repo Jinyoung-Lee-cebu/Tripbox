@@ -1,33 +1,14 @@
 // pages/index.jsx
 import Header from '@/components/Header'
-import Image from 'next/image'
-import Link from 'next/link'
+import Hero from '@/components/Hero'
 import PopularProducts from '@/components/PopularProducts'
+import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="flex flex-col">
+    <div>
       <Header />
-
-      {/* Hero Section */}
-      <section className="relative w-full h-screen">
-        <Image
-          src="/assets/wall.jpg"
-          alt="배경 이미지"
-          fill
-          style={{ objectFit: 'cover' }}
-          className="z-0"
-        />
-        <div className="absolute top-12 left-4 z-10 text-white">
-          <h1 className="text-2xl font-bold mb-2">세부에서 만나는 특별한 추억</h1>
-          <Link href="/products">
-            <span className="inline-block bg-white text-black px-4 py-2 rounded text-sm font-semibold">
-              Shop Now
-            </span>
-          </Link>
-        </div>
-      </section>
-
+      <Hero />
       <PopularProducts />
 
       {/* How It Works */}
