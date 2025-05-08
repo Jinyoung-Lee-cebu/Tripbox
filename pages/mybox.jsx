@@ -1,17 +1,16 @@
-// pages/mybox.jsx
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import Toast from '@/components/Toast'
 
 export default function MyBox() {
-  const { items, removeFromCart, clearCart } = useCart()
-  const [name, setName]         = useState('')
-  const [phone, setPhone]       = useState('')
-  const [kakaoId, setKakaoId]   = useState('')
+  const { items, removeFromCart, clearCart, addToCart } = useCart()
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [kakaoId, setKakaoId] = useState('')
   const [deliveryType, setDeliveryType] = useState('pickup')
-  const [address, setAddress]   = useState('')
-  const [toast, setToast]       = useState('')
+  const [address, setAddress] = useState('')
+  const [toast, setToast] = useState('')
 
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
 
@@ -45,8 +44,7 @@ export default function MyBox() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">My Box</h1>
+<div className="min-h-screen bg-white px-4 pt-0 pb-6">      <h1 className="text-2xl font-bold mb-4">My Box</h1>
 
       {items.length === 0 ? (
         <p>장바구니가 비어 있습니다.</p>
@@ -58,9 +56,22 @@ export default function MyBox() {
                 <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
                 <div>
                   <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-600">
-                    ₱{item.price} × {item.qty} = ₱{item.price * item.qty}
-                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <button
+                      onClick={() => addToCart(item, -1)}
+                      className="px-2 py-1 bg-gray-200 rounded text-sm"
+                    >
+                      −
+                    </button>
+                    <span className="px-2 text-sm">{item.qty}</span>
+                    <button
+                      onClick={() => addToCart(item, 1)}
+                      className="px-2 py-1 bg-gray-200 rounded text-sm"
+                    >
+                      ＋
+                    </button>
+                    <span className="text-sm text-gray-600">₱{item.price * item.qty}</span>
+                  </div>
                 </div>
               </div>
               <button
@@ -110,7 +121,7 @@ export default function MyBox() {
           {deliveryType === 'delivery' && (
             <input
               type="text"
-              placeholder="배송 주소 입력"
+              placeholder="배송지 및 희망 시간 입력"
               value={address}
               onChange={e => setAddress(e.target.value)}
               className="w-full border px-3 py-2 rounded"

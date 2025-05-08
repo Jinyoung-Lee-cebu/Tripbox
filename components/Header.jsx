@@ -6,7 +6,7 @@ export default function Header() {
   const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
 
   return (
-    <header className="bg-purple-800 text-white pr-4 py-1 flex items-center shadow">
+    <header className="bg-purple-800 text-white pr-4 py-1 flex items-center shadow fixed top-0 left-0 w-full z-50">
       <Link href="/">
         <img
           src="/assets/top.png"

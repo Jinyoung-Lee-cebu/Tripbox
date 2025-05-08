@@ -11,7 +11,9 @@ export default function App({ Component, pageProps }) {
   return (
     <CartProvider>
       {!isHome && <Header />}
-      <Component {...pageProps} />
+      <main className={!isHome ? 'pt-[80px] pb-[80px]' : ''}>
+        <Component {...pageProps} />
+      </main>
       {!isHome && <Footer />}
     </CartProvider>
   )
