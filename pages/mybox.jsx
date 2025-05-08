@@ -16,7 +16,7 @@ export default function MyBox() {
 
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(''), 1000)
+    const t = setTimeout(() => setToast(''), 1500)
     return () => clearTimeout(t)
   }, [toast])
 
