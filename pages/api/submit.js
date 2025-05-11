@@ -43,8 +43,24 @@ export default async function handler(req, res) {
 
     // ✅ 주문번호 생성 (중복 방지)
     const now = new Date()
-    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
-    const timeStr = now.toTimeString().slice(0, 8)
+
+    // ✅ 필리핀 시간대 기준으로 시간 포맷
+    const timeStr = now.toLocaleTimeString('en-PH', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'Asia/Manila',
+    })
+
+    const dateStr = now.toLocaleDateString('en-PH', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).replace(/\//g, '') // MM/DD/YYYY → MMDDYYYY → → YYYYMMDD로 변환 필요 시 수정
+
+    const fixedDateStr = `${dateStr.slice(4, 8)}${dateStr.slice(0, 2)}${dateStr.slice(2, 4)}` // YYYYMMDD
 
     const readRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -52,10 +68,10 @@ export default async function handler(req, res) {
     })
 
     const todayCount = readRes.data.values?.filter(row =>
-      row[0]?.startsWith(`TB${dateStr}`)
+      row[0]?.startsWith(`TB${fixedDateStr}`)
     ).length || 0
 
-    const orderId = `TB${dateStr}${String(todayCount + 1).padStart(4, '0')}`
+    const orderId = `TB${fixedDateStr}${String(todayCount + 1).padStart(4, '0')}`
     const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
 
     const rows = items.map(item => ([
@@ -79,9 +95,9 @@ export default async function handler(req, res) {
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: rows },
     })
-// ✅ Google Apps Script 자동 병합 호출
-await fetch('https://script.google.com/macros/s/AKfycbxwhBPf7nFJdkVzGNs76OXoKoJPvgAQCVjRG8CzatjAhVFKjat-B8gThgy2o_XS_gq_tQ/exec')
 
+    // ✅ Google Apps Script 자동 병합 호출
+    await fetch('https://script.google.com/macros/s/AKfycbxwhBPf7nFJdkVzGNs76OXoKoJPvgAQCVjRG8CzatjAhVFKjat-B8gThgy2o_XS_gq_tQ/exec')
 
     return res.status(200).json({ message: '주문이 스프레드시트에 저장되었습니다.', orderId })
   } catch (error) {

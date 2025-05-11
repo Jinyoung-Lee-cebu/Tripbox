@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import Toast from '@/components/Toast'
+import products from '@/data/products'
 
 export default function MyBox() {
   const { items, removeFromCart, clearCart, addToCart } = useCart()
@@ -11,8 +12,19 @@ export default function MyBox() {
   const [deliveryType, setDeliveryType] = useState('pickup')
   const [address, setAddress] = useState('')
   const [toast, setToast] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
+  const sortedItems = products
+    .filter(p => {
+      const match = items.find(i => i.id === p.id)
+      return match && match.qty > 0
+    })
+    .map(p => ({
+      ...p,
+      qty: items.find(i => i.id === p.id)?.qty || 0,
+    }))
+
+  const total = sortedItems.reduce((sum, i) => sum + i.price * i.qty, 0)
 
   useEffect(() => {
     if (!toast) return
@@ -21,15 +33,30 @@ export default function MyBox() {
   }, [toast])
 
   const handleSubmit = async () => {
+    if (isSubmitting) return
     if (!name || !phone || !kakaoId) {
       setToast('⚠️ 이름·전화·카톡ID를 입력하세요.')
       return
     }
+    if (sortedItems.length === 0) {
+      setToast('⚠️ 장바구니에 상품이 없습니다.')
+      return
+    }
+
+    setIsSubmitting(true)
+
     try {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, kakaoId, items, deliveryType, address }),
+        body: JSON.stringify({
+          name,
+          phone,
+          kakaoId,
+          items: sortedItems,
+          deliveryType,
+          address
+        }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -40,17 +67,20 @@ export default function MyBox() {
       }
     } catch {
       setToast('❌ 주문 접수 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-<div className="min-h-screen bg-white px-4 pt-0 pb-6">      <h1 className="text-2xl font-bold mb-4">My Box</h1>
+    <div className="min-h-screen bg-white px-4 pt-0 pb-6">
+      <h1 className="text-2xl font-bold mb-4">My Box</h1>
 
-      {items.length === 0 ? (
+      {sortedItems.length === 0 ? (
         <p>장바구니가 비어 있습니다.</p>
       ) : (
         <ul className="space-y-4">
-          {items.map(item => (
+          {sortedItems.map(item => (
             <li key={item.id} className="flex items-center justify-between bg-gray-50 p-4 rounded">
               <div className="flex items-center space-x-4">
                 <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
@@ -131,9 +161,14 @@ export default function MyBox() {
 
         <button
           onClick={handleSubmit}
-          className="w-full bg-purple-800 text-white py-3 rounded"
+          disabled={isSubmitting || sortedItems.length === 0} // ✅ 조건 추가됨
+          className={`w-full py-3 rounded text-white ${
+            isSubmitting || sortedItems.length === 0
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-purple-800'
+          }`}
         >
-          주문 접수
+          {isSubmitting ? '주문 접수 중...' : '주문 접수'}
         </button>
       </div>
 
