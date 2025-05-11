@@ -1,6 +1,5 @@
+// 🔁 이 부분 전체 복사해서 붙여도 됩니다
 import { google } from 'googleapis'
-
-let orderCounter = 1 // 서버 재시작 시 초기화됨
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,7 +20,7 @@ export default async function handler(req, res) {
 
     const sheets = google.sheets({ version: 'v4', auth })
 
-    // 📌 헤더 확인 → 없으면 삽입
+    // ✅ 헤더 확인 → 없으면 삽입
     const headerRange = '주문내역!A1:K1'
     const headerCheck = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -42,13 +41,21 @@ export default async function handler(req, res) {
       })
     }
 
-    // 📌 주문 데이터 구성
+    // ✅ 주문번호 생성 (중복 방지)
     const now = new Date()
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
     const timeStr = now.toTimeString().slice(0, 8)
-    const orderId = `TB${dateStr}${String(orderCounter).padStart(4, '0')}`
-    orderCounter++
 
+    const readRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: '주문내역!A:A',
+    })
+
+    const todayCount = readRes.data.values?.filter(row =>
+      row[0]?.startsWith(`TB${dateStr}`)
+    ).length || 0
+
+    const orderId = `TB${dateStr}${String(todayCount + 1).padStart(4, '0')}`
     const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
 
     const rows = items.map(item => ([
@@ -65,13 +72,16 @@ export default async function handler(req, res) {
       total
     ]))
 
-    // 📌 주문 행 추가
+    // ✅ 주문 행 추가
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: '주문내역!A:K',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: rows },
     })
+// ✅ Google Apps Script 자동 병합 호출
+await fetch('https://script.google.com/macros/s/AKfycbxwhBPf7nFJdkVzGNs76OXoKoJPvgAQCVjRG8CzatjAhVFKjat-B8gThgy2o_XS_gq_tQ/exec')
+
 
     return res.status(200).json({ message: '주문이 스프레드시트에 저장되었습니다.', orderId })
   } catch (error) {
