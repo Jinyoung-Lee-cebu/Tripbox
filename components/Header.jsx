@@ -16,9 +16,19 @@ export default function Header() {
       </Link>
 
       <nav className="ml-auto space-x-4 text-sm flex items-center">
+        {/* Shop 메뉴 - 앞으로 이동 */}
         <Link href="/products">
           <span className="font-semibold">Shop</span>
         </Link>
+
+        {/* Rent 메뉴 - 뒤로 이동 */}
+        <Link href="/seascooter">
+          <span className="font-bold text-red-400 hover:text-red-300 transition">
+            Rent
+          </span>
+        </Link>
+
+        {/* My Box 메뉴 */}
         <Link href="/mybox">
           <span className="text-yellow-300 font-semibold">
             My Box
