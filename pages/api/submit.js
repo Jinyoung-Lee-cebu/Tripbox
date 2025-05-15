@@ -11,8 +11,6 @@ export default async function handler(req, res) {
   const privateKey  = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
 
   try {
-    console.log("🔥 요청 받은 데이터:", req.body)
-
     const auth = new google.auth.JWT({
       email: clientEmail,
       key: privateKey,
@@ -42,7 +40,7 @@ export default async function handler(req, res) {
       })
     }
 
-    // ✅ 주문번호 생성 (중복 방지)
+    // ✅ 주문번호 생성
     const now = new Date()
 
     const timeStr = now.toLocaleTimeString('en-PH', {
@@ -60,8 +58,7 @@ export default async function handler(req, res) {
       day: '2-digit',
     }).replace(/\//g, '')
 
-    const fixedDateStr = `${dateStr.slice(4, 8)}${dateStr.slice(0, 2)}${dateStr.slice(2, 4)}` // YYYYMMDD
-
+    const fixedDateStr = `${dateStr.slice(4, 8)}${dateStr.slice(0, 2)}${dateStr.slice(2, 4)}`
     const readRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: `'Online order'!A:A`,
@@ -73,6 +70,8 @@ export default async function handler(req, res) {
 
     const orderId = `TB${fixedDateStr}${String(todayCount + 1).padStart(4, '0')}`
     const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
+
+    const startRow = (readRes.data.values?.length || 1) + 1
 
     const rows = items.map(item => ([
       orderId,
@@ -88,6 +87,7 @@ export default async function handler(req, res) {
       total
     ]))
 
+    // ✅ append rows
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: `'Online order'!A:K`,
@@ -95,8 +95,26 @@ export default async function handler(req, res) {
       requestBody: { values: rows },
     })
 
-    // ✅ Google Apps Script 자동 병합 호출 (선택사항)
-    await fetch('https://script.google.com/macros/s/AKfycbxwhBPf7nFJdkVzGNs76OXoKoJPvgAQCVjRG8CzatjAhVFKjat-B8gThgy2o_XS_gq_tQ/exec')
+    // ✅ 병합 범위 지정: A, B, C, D, E, F, G, K (index 0~6, 10)
+    const mergeCols = [0, 1, 2, 3, 4, 5, 6, 10]
+    const mergeRequests = mergeCols.map(col => ({
+      mergeCells: {
+        range: {
+          sheetId: 0, // 기본 시트 ID
+          startRowIndex: startRow - 1, // 0부터 시작
+          endRowIndex: startRow - 1 + items.length,
+          startColumnIndex: col,
+          endColumnIndex: col + 1
+        },
+        mergeType: 'MERGE_ALL'
+      }
+    }))
+
+    // ✅ 병합 실행
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: sheetId,
+      requestBody: { requests: mergeRequests }
+    })
 
     return res.status(200).json({ message: '주문이 스프레드시트에 저장되었습니다.', orderId })
   } catch (error) {
