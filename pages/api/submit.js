@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   const privateKey  = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
 
   try {
+  console.log("🔥 요청 받은 데이터:", req.body)
     const auth = new google.auth.JWT({
       email: clientEmail,
       key: privateKey,
