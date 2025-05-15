@@ -1,4 +1,3 @@
-// 🔁 이 부분 전체 복사해서 붙여도 됩니다
 import { google } from 'googleapis'
 
 export default async function handler(req, res) {
@@ -21,7 +20,7 @@ export default async function handler(req, res) {
     const sheets = google.sheets({ version: 'v4', auth })
 
     // ✅ 헤더 확인 → 없으면 삽입
-    const headerRange = '주문내역!A1:K1'
+    const headerRange = 'Online order!A1:K1'
     const headerCheck = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: headerRange,
@@ -58,13 +57,13 @@ export default async function handler(req, res) {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    }).replace(/\//g, '') // MM/DD/YYYY → MMDDYYYY → → YYYYMMDD로 변환 필요 시 수정
+    }).replace(/\//g, '')
 
     const fixedDateStr = `${dateStr.slice(4, 8)}${dateStr.slice(0, 2)}${dateStr.slice(2, 4)}` // YYYYMMDD
 
     const readRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: '주문내역!A:A',
+      range: 'Online order!A:A',
     })
 
     const todayCount = readRes.data.values?.filter(row =>
@@ -91,7 +90,7 @@ export default async function handler(req, res) {
     // ✅ 주문 행 추가
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: '주문내역!A:K',
+      range: 'Online order!A:K',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: rows },
     })
