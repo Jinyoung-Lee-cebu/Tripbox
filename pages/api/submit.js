@@ -11,7 +11,8 @@ export default async function handler(req, res) {
   const privateKey  = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
 
   try {
-  console.log("🔥 요청 받은 데이터:", req.body)
+    console.log("🔥 요청 받은 데이터:", req.body)
+
     const auth = new google.auth.JWT({
       email: clientEmail,
       key: privateKey,
@@ -44,7 +45,6 @@ export default async function handler(req, res) {
     // ✅ 주문번호 생성 (중복 방지)
     const now = new Date()
 
-    // ✅ 필리핀 시간대 기준으로 시간 포맷
     const timeStr = now.toLocaleTimeString('en-PH', {
       hour12: false,
       hour: '2-digit',
@@ -88,7 +88,6 @@ export default async function handler(req, res) {
       total
     ]))
 
-    // ✅ 주문 행 추가
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: `'Online order'!A:K`,
@@ -96,7 +95,7 @@ export default async function handler(req, res) {
       requestBody: { values: rows },
     })
 
-    // ✅ Google Apps Script 자동 병합 호출
+    // ✅ Google Apps Script 자동 병합 호출 (선택사항)
     await fetch('https://script.google.com/macros/s/AKfycbxwhBPf7nFJdkVzGNs76OXoKoJPvgAQCVjRG8CzatjAhVFKjat-B8gThgy2o_XS_gq_tQ/exec')
 
     return res.status(200).json({ message: '주문이 스프레드시트에 저장되었습니다.', orderId })
