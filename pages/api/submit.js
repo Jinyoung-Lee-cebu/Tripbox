@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
     const sheets = google.sheets({ version: 'v4', auth })
 
-    // ✅ 헤더 확인 → 없으면 삽입
+    // ✅ 헤더 확인 및 삽입
     const headerRange = `'Online order'!A1:K1`
     const headerCheck = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -59,15 +59,21 @@ export default async function handler(req, res) {
     }).replace(/\//g, '')
 
     const fixedDateStr = `${dateStr.slice(4, 8)}${dateStr.slice(0, 2)}${dateStr.slice(2, 4)}`
+
     const readRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: `'Online order'!A:A`,
     })
 
-    const todayCount = readRes.data.values?.filter(row =>
-      row[0]?.startsWith(`TB${fixedDateStr}`)
-    ).length || 0
-
+    // ✅ 중복 주문번호 방지를 위한 Set 사용
+    const uniqueOrderIds = new Set()
+    readRes.data.values?.forEach(row => {
+      const cell = row[0]
+      if (cell?.startsWith(`TB${fixedDateStr}`)) {
+        uniqueOrderIds.add(cell)
+      }
+    })
+    const todayCount = uniqueOrderIds.size
     const orderId = `TB${fixedDateStr}${String(todayCount + 1).padStart(4, '0')}`
     const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
 
@@ -87,7 +93,7 @@ export default async function handler(req, res) {
       total
     ]))
 
-    // ✅ append rows
+    // ✅ 주문 내용 저장
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: `'Online order'!A:K`,
@@ -95,13 +101,13 @@ export default async function handler(req, res) {
       requestBody: { values: rows },
     })
 
-    // ✅ 병합 범위 지정: A, B, C, D, E, F, G, K (index 0~6, 10)
+    // ✅ A~G, K열 병합 처리
     const mergeCols = [0, 1, 2, 3, 4, 5, 6, 10]
     const mergeRequests = mergeCols.map(col => ({
       mergeCells: {
         range: {
-          sheetId: 0, // 기본 시트 ID
-          startRowIndex: startRow - 1, // 0부터 시작
+          sheetId: 0,
+          startRowIndex: startRow - 1,
           endRowIndex: startRow - 1 + items.length,
           startColumnIndex: col,
           endColumnIndex: col + 1
@@ -110,7 +116,6 @@ export default async function handler(req, res) {
       }
     }))
 
-    // ✅ 병합 실행
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId: sheetId,
       requestBody: { requests: mergeRequests }
