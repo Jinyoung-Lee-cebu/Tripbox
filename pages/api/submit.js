@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const sheets = google.sheets({ version: 'v4', auth })
 
     // ✅ 헤더 확인 → 없으면 삽입
-    const headerRange = 'Online order!A1:K1'
+    const headerRange = `'Online order'!A1:K1`
     const headerCheck = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: headerRange,
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
     const readRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Online order!A:A',
+      range: `'Online order'!A:A`,
     })
 
     const todayCount = readRes.data.values?.filter(row =>
@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     // ✅ 주문 행 추가
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: 'Online order!A:K',
+      range: `'Online order'!A:K`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: rows },
     })
