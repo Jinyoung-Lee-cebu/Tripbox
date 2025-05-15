@@ -101,6 +101,9 @@ export default async function handler(req, res) {
       requestBody: { values: rows },
     })
 
+    // ✅ 0.7초 대기 (Google Sheets 처리 안정화용)
+    await new Promise(resolve => setTimeout(resolve, 700))
+
     // ✅ A~G, K열 병합 처리
     const mergeCols = [0, 1, 2, 3, 4, 5, 6, 10]
     const mergeRequests = mergeCols.map(col => ({
