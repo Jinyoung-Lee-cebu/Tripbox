@@ -1,178 +1,68 @@
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useCart } from '@/context/CartContext'
-import Toast from '@/components/Toast'
-import products from '@/data/products'
-
-export default function MyBox() {
-  const { items, removeFromCart, clearCart, addToCart } = useCart()
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [kakaoId, setKakaoId] = useState('')
-  const [deliveryType, setDeliveryType] = useState('pickup')
-  const [address, setAddress] = useState('')
-  const [toast, setToast] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const sortedItems = products
-    .filter(p => {
-      const match = items.find(i => i.id === p.id)
-      return match && match.qty > 0
-    })
-    .map(p => ({
-      ...p,
-      qty: items.find(i => i.id === p.id)?.qty || 0,
-    }))
-
-  const total = sortedItems.reduce((sum, i) => sum + i.price * i.qty, 0)
-
-  useEffect(() => {
-    if (!toast) return
-    const t = setTimeout(() => setToast(''), 1500)
-    return () => clearTimeout(t)
-  }, [toast])
-
-  const handleSubmit = async () => {
-    if (isSubmitting) return
-    if (!name || !phone || !kakaoId) {
-      setToast('⚠️ 이름·전화·카톡ID를 입력하세요.')
-      return
-    }
-    if (sortedItems.length === 0) {
-      setToast('⚠️ 장바구니에 상품이 없습니다.')
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      const res = await fetch('/api/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          phone,
-          kakaoId,
-          items: sortedItems,
-          deliveryType,
-          address
-        }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setToast(`✅ 주문이 접수되었습니다. (번호: ${data.orderId})`)
-        clearCart()
-      } else {
-        setToast(`❌ ${data.message}`)
-      }
-    } catch {
-      setToast('❌ 주문 접수 중 오류가 발생했습니다.')
-    } finally {
-      setIsSubmitting(false)
-    }
+const handleSubmit = async () => {
+  if (isSubmitting) return
+  if (!name || !phone || !kakaoId) {
+    setToast('⚠️ 이름·전화·카톡ID를 입력하세요.')
+    return
+  }
+  if (sortedItems.length === 0) {
+    setToast('⚠️ 장바구니에 상품이 없습니다.')
+    return
   }
 
-  return (
-    <div className="min-h-screen bg-white px-4 pt-0 pb-6">
-      <h1 className="text-2xl font-bold mb-4">My Box</h1>
+  setIsSubmitting(true)
 
-      {sortedItems.length === 0 ? (
-        <p>장바구니가 비어 있습니다.</p>
-      ) : (
-        <ul className="space-y-4">
-          {sortedItems.map(item => (
-            <li key={item.id} className="flex items-center justify-between bg-gray-50 p-4 rounded">
-              <div className="flex items-center space-x-4">
-                <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <button
-                      onClick={() => addToCart(item, -1)}
-                      className="px-2 py-1 bg-gray-200 rounded text-sm"
-                    >
-                      −
-                    </button>
-                    <span className="px-2 text-sm">{item.qty}</span>
-                    <button
-                      onClick={() => addToCart(item, 1)}
-                      className="px-2 py-1 bg-gray-200 rounded text-sm"
-                    >
-                      ＋
-                    </button>
-                    <span className="text-sm text-gray-600">₱{item.price * item.qty}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => removeFromCart(item.id)}
-                className="text-xl text-red-500"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+  try {
+    // 1. 스프레드시트에 저장
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        phone,
+        kakaoId,
+        items: sortedItems,
+        deliveryType,
+        address
+      }),
+    })
+    const data = await res.json()
 
-      <div className="mt-6 space-y-4">
-        <p className="font-semibold">총 합계: ₱{total.toLocaleString()}</p>
+    if (!res.ok) {
+      setToast(`❌ ${data.message}`)
+      return
+    }
 
-        <div className="space-y-2">
-          <input
-            type="text"
-            placeholder="이름 (필수)"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-          />
-          <input
-            type="text"
-            placeholder="전화번호 (필수)"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-          />
-          <input
-            type="text"
-            placeholder="카카오톡 ID (필수)"
-            value={kakaoId}
-            onChange={e => setKakaoId(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-          />
-          <select
-            value={deliveryType}
-            onChange={e => setDeliveryType(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-          >
-            <option value="pickup">픽업</option>
-            <option value="delivery">배송</option>
-          </select>
-          {deliveryType === 'delivery' && (
-            <input
-              type="text"
-              placeholder="배송지 및 희망 시간 입력"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
-            />
-          )}
-        </div>
+    // 2. 클립보드용 텍스트 구성
+    const orderText = `
+[TRIPBOX 주문 접수]
+이름: ${name}
+전화번호: ${phone}
+카카오톡 ID: ${kakaoId}
+픽업 방식: ${deliveryType === 'pickup' ? '픽업' : '배송'}
+${deliveryType === 'delivery' ? `주소: ${address}` : ''}
+총금액: ₱${total.toLocaleString()}
 
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || sortedItems.length === 0} // ✅ 조건 추가됨
-          className={`w-full py-3 rounded text-white ${
-            isSubmitting || sortedItems.length === 0
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-purple-800'
-          }`}
-        >
-          {isSubmitting ? '주문 접수 중...' : '주문 접수'}
-        </button>
-      </div>
+🧸 주문내역:
+${sortedItems.map(i => `- ${i.name} x ${i.qty} = ₱${(i.price * i.qty).toLocaleString()}`).join('\n')}
+    `.trim()
 
-      {toast && <Toast message={toast} />}
-    </div>
-  )
+    // 3. 클립보드 복사
+    await navigator.clipboard.writeText(orderText)
+
+    // 4. 장바구니 비우기 및 안내
+    clearCart()
+    setToast(`✅ 주문이 접수되었습니다. (번호: ${data.orderId})`)
+
+    // 5. 안내 후 카카오톡 채널로 이동
+    setTimeout(() => {
+      alert("주문 정보가 클립보드에 복사되었습니다.\n카카오톡 채널에 들어가 붙여넣기 후 메시지를 전송해주세요.")
+      window.open("http://pf.kakao.com/_Pnebn/chat", "_blank")
+    }, 300) // 약간의 지연 후 실행
+
+  } catch (err) {
+    console.error(err)
+    setToast('❌ 주문 접수 중 오류가 발생했습니다.')
+  } finally {
+    setIsSubmitting(false)
+  }
 }
